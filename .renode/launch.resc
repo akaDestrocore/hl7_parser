@@ -2,7 +2,7 @@ mach create "trq"
 
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
 
-sysbus LoadBinary @build/Debug/HL7_Parser.elf 0x08000000
+sysbus LoadELF @build/Debug/HL7_Parser.elf
 
 sysbus.cpu VectorTableOffset 0x08000000
 

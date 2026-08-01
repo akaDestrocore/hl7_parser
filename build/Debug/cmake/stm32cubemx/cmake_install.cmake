@@ -1,4 +1,4 @@
-# Install script for directory: /home/destrocore/WORKSPACE/VS_CODE_PROJECTS/STM32/HL7_Parser/cmake/stm32cubemx
+# Install script for directory: /home/destrocore/WORKSPACE/VS_CODE_PROJECTS/STM32/hl7_parser/cmake/stm32cubemx
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -40,6 +40,6 @@ endif()
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
 if(CMAKE_INSTALL_LOCAL_ONLY)
-  file(WRITE "/home/destrocore/WORKSPACE/VS_CODE_PROJECTS/STM32/HL7_Parser/build/Debug/cmake/stm32cubemx/install_local_manifest.txt"
+  file(WRITE "/home/destrocore/WORKSPACE/VS_CODE_PROJECTS/STM32/hl7_parser/build/Debug/cmake/stm32cubemx/install_local_manifest.txt"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
 endif()
