@@ -1,0 +1,44 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/HL7_Parser.elf",
+            "servertype": "stlink",
+            "device": "STM32F407VGTx",
+            "interface": "swd",
+            "svdFile": "${config:stm32.cltPath}/STMicroelectronics_CMSIS_SVD/STM32F407.svd",
+            "serverpath": "${workspaceFolder}/.vscode/gdbserver-wrapper.sh",
+            "gdbPath": "${config:stm32.cltPath}/GNU-tools-for-STM32/bin/arm-none-eabi-gdb",
+            "showDevDebugOutput": "raw",
+            "runToEntryPoint": "main",
+            "loadFiles": [
+                "${workspaceFolder}/build/Debug/HL7_Parser.elf"
+            ],
+            "preLaunchTask": "CMake: Build"
+        },
+        {
+            "name": "Renode: Debug",
+            "type": "cortex-debug",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/HL7_Parser.elf",
+            "servertype": "external",
+            "gdbTarget": "localhost:3333",
+            "device": "STM32F407VGTx",
+            "svdFile": "${config:stm32.cltPath}/STMicroelectronics_CMSIS_SVD/STM32F407.svd",
+            "gdbPath": "${config:stm32.cltPath}/GNU-tools-for-STM32/bin/arm-none-eabi-gdb",
+            "showDevDebugOutput": "raw",
+            "loadFiles": [],
+            "runToEntryPoint": "Reset_Handler",
+            "overrideLaunchCommands": [
+                "monitor start"
+            ],
+            "preLaunchTask": "Renode: Start",
+            "postDebugTask": "Renode: Kill"
+        }
+    ]
+}

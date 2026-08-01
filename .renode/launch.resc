@@ -1,0 +1,15 @@
+mach create "trq"
+
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+
+sysbus LoadBinary @build/Debug/HL7_Parser.elf 0x08000000
+
+sysbus.cpu VectorTableOffset 0x08000000
+
+emulation CreateUartPtyTerminal "usart2Pty" "/tmp/trq-usart2" true
+connector Connect sysbus.usart2 usart2Pty
+
+emulation CreateUartPtyTerminal "uart4Pty" "/tmp/trq-uart4" true
+connector Connect sysbus.uart4 uart4Pty
+
+machine StartGdbServer 3333
