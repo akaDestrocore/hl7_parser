@@ -21,7 +21,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "mllp_framer.h"
+#include "ring_buffer.h"
+#include "patient_vitals.h"
+#include "hl7_parser.h"
+#include "hl7_ack.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +48,10 @@ UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+static RingBuffer_Handle_t g_uart4RxRing;
+static MllpFramer_Handle_t g_mllpFramer;
+static PatientVitals_t g_patientVitals;
+static uint8_t g_rxByte;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,7 +65,21 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/**
+  * @brief This function handles UART4 global interrupt.
+  */
+void UART4_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&huart4);
+}
 
+/**
+  * @brief This function handles USART2 global interrupt.
+  */
+void USART2_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(&huart2);
+}
 /* USER CODE END 0 */
 
 /**
@@ -93,16 +114,40 @@ int main(void)
   MX_UART4_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  ringBuffer_init(&g_uart4RxRing);
+  mllpFramer_init(&g_mllpFramer);
+  patientVitals_init(&g_patientVitals);
+  HAL_UART_Receive_IT(&huart4, &g_rxByte, 1u);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+      uint8_t rxByte;
+      uint32_t nowTick = HAL_GetTick();
 
-    /* USER CODE BEGIN 3 */
+      while (ringBuffer_pop(&g_uart4RxRing, &rxByte))
+      {
+          if (mllpFramer_processByte(&g_mllpFramer, rxByte, nowTick))
+          {
+              Hl7Parser_Result_t parseResult;
+
+              hl7Parser_parseMessage(g_mllpFramer.msgBuffer, g_mllpFramer.msgLen, &g_patientVitals, &parseResult);
+
+              // A framing error (overflow, second VT, etc.) that occurred while this frame was
+              // open makes it AE even if the surviving bytes happened to parse cleanly.
+              parseResult.success = parseResult.success && !g_mllpFramer.lastFrameHadError;
+
+              (void)hl7Ack_send(&huart4, &parseResult);
+              // TODO: update UART2 display from g_patientVitals
+          }
+      }
+
+      mllpFramer_poll(&g_mllpFramer, nowTick);
+
+      /* USER CODE END WHILE */
+      /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -240,7 +285,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+/**
+ * @brief HAL UART RX complete callback - fires from ISR context on every received byte
+ * @param huart UART handle that completed reception
+ * @retval None
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (UART4 == huart->Instance)  // Yoda condition
+    {
+        (void)ringBuffer_push(&g_uart4RxRing, g_rxByte);
+        (void)HAL_UART_Receive_IT(&huart4, &g_rxByte, 1u);  // re-arm for next byte
+    }
+}
 /* USER CODE END 4 */
 
 /**

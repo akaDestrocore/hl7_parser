@@ -33,7 +33,9 @@ void mllpFramer_init(MllpFramer_Handle_t *pHandle);
 // Feed one byte at a time. Returns true when *pHandle->msgBuffer holds a complete,
 // validated frame (VT...FS CR stripped). Caller should hand msgBuffer/msgLen to the
 // HL7 parser immediately, then the framer resets itself for the next frame.
-bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte);
+// currentTick is stamped into frameStartTick when a new frame opens (VT seen),
+// so mllpFramer_poll can detect a stalled/truncated frame later.
+bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte, uint32_t currentTick);
 
 // Call once per main loop iteration (independent of new bytes) so a frame that
 // opened and then went silent gets timed out instead of blocking forever.

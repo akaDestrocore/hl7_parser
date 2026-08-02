@@ -46,6 +46,9 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/ring_buffer.c
     Core/Src/mllp_framer.c
+    Core/Src/patient_vitals.c
+    Core/Src/hl7_parser.c
+    Core/Src/hl7_ack.c
 )
 
 # Add include paths

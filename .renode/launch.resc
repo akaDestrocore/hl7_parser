@@ -12,4 +12,7 @@ connector Connect sysbus.usart2 usart2Pty
 emulation CreateUartPtyTerminal "uart4Pty" "/tmp/trq-uart4" true
 connector Connect sysbus.uart4 uart4Pty
 
+showAnalyzer sysbus.usart2
+showAnalyzer sysbus.uart4
+
 machine StartGdbServer 3333

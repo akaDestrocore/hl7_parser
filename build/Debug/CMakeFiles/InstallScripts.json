@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/destrocore/WORKSPACE/VS_CODE_PROJECTS/STM32/hl7_parser/build/Debug/cmake_install.cmake",
-		"/home/destrocore/WORKSPACE/VS_CODE_PROJECTS/STM32/hl7_parser/build/Debug/cmake/stm32cubemx/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

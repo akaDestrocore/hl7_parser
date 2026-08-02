@@ -29,9 +29,10 @@ void mllpFramer_init(MllpFramer_Handle_t *pHandle)
  * @brief Feeds a single received byte through the MLLP framing state machine
  * @param pHandle Pointer to the framer instance
  * @param byte Byte pulled from the UART ring buffer
+ * @param currentTick Current system tick in ms, stamped when a frame opens
  * @retval true if this byte completed a valid frame (msgBuffer/msgLen now ready), false otherwise
  */
-bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte)
+bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte, uint32_t currentTick)
 {
     switch (pHandle->state)
     {
@@ -41,19 +42,16 @@ bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte)
                 pHandle->msgLen = 0u;
                 pHandle->state = MllpFramer_STATE_IN_FRAME;
                 pHandle->lastFrameHadError = false;
-                // pHandle->frameStartTick set by caller via mllpFramer_poll's tick source,
-                // or pass currentTick into this function if you prefer it here instead.
+                pHandle->frameStartTick = currentTick;
             }
-            // any other byte outside a frame is noise - discard silently
             break;
 
         case MllpFramer_STATE_IN_FRAME:
             if (MLLP_VT == byte)
             {
-                // second VT before close: discard incomplete frame, start fresh
                 pHandle->msgLen = 0u;
                 pHandle->lastFrameHadError = true;
-                // stay in IN_FRAME - this VT is the new frame's opener
+                pHandle->frameStartTick = currentTick;  // restart timeout window for the new frame
             }
             else if (MLLP_FS == byte)
             {
@@ -68,8 +66,6 @@ bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte)
                 }
                 else
                 {
-                    // overflow - flag it, keep consuming bytes until frame boundary
-                    // so we don't desync on the *next* frame
                     pHandle->lastFrameHadError = true;
                 }
             }
@@ -78,13 +74,11 @@ bool mllpFramer_processByte(MllpFramer_Handle_t *pHandle, uint8_t byte)
         case MllpFramer_STATE_GOT_FS:
             if (MLLP_CR == byte)
             {
-                // valid, complete frame
                 pHandle->state = MllpFramer_STATE_IDLE;
                 return true;
             }
             else
             {
-                // FS not followed by CR - malformed close, discard and resync
                 mllpFramer_reset(pHandle);
                 pHandle->lastFrameHadError = true;
             }
